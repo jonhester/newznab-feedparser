@@ -1,0 +1,41 @@
+{
+  "name": "newznab-feedparser",
+  "version": "0.0.0",
+  "description": "Parses newznab rss feeds into an array of objects",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "npm run clean && ./node_modules/.bin/babel src --out-dir lib",
+    "prepublish": "npm run build",
+    "test": "npm run build && node ./tests/test.js",
+    "lint": "./node_modules/.bin/eslint src",
+    "clean": "rm -rf lib",
+    "preversion": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonhester/newznab-parser.git"
+  },
+  "keywords": [
+    "newznab",
+    "rss",
+    "feed",
+    "nzb"
+  ],
+  "author": "Jon Hester <jon@hester.io>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jonhester/newznab-parser/issues"
+  },
+  "homepage": "https://github.com/jonhester/newznab-parser#readme",
+  "devDependencies": {
+    "babel": "^5.8.23",
+    "babel-eslint": "^4.1.3",
+    "eslint": "^1.6.0",
+    "tape": "^4.2.1"
+  },
+  "dependencies": {
+    "episode-parser": "^1.0.0",
+    "request-promise": "^0.4.3",
+    "xml2json": "^0.9.0"
+  }
+}
