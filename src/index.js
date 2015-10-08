@@ -41,7 +41,8 @@ let parseFeed = (xml, lastCheck) => {
       codec: parsed.codec || null,
       group: parsed.group || null,
       year: parsed.year || null,
-      isHD: newznab.category == 5040 || parsed.quality >= 720
+      isHD: newznab.category == 5040 || parsed.quality >= 720,
+      pubDate: new Date(item.pubDate)
     };
 
     return episode;
