@@ -19,6 +19,7 @@ let parseFeed = (xml, lastCheck) => {
     if (!parsed) {
       return null;
     }
+
     let newznab = {};
 
     item['newznab:attr'].forEach( (attr) => {
@@ -26,27 +27,38 @@ let parseFeed = (xml, lastCheck) => {
     });
 
     let episode = {
-      title: item.title,
-      nzbUrl: item.enclosure.url,
-      rage_id: newznab.rageid || null,
-      tvdb_id: newznab.tvdbid || null,
-      series_id: newznab.seriesid || null,
-      season: parsed.season || null,
-      episode: parsed.episode || null,
-      show: parsed.show || null,
-      name: parsed.name || null,
-      category: newznab.category,
-      quality: parsed.quality || null,
-      source: parsed.source || null,
+      category: +newznab.category,
+      categoryName: item.category,
       codec: parsed.codec || null,
+      comments: item.comments,
+      description: item.description,
+      episode: +parsed.episode || null,
+      genre: newznab.genre || null,
+      grabs: +newznab.grabs || null,
       group: parsed.group || null,
-      year: parsed.year || null,
-      isHD: newznab.category == 5040 || parsed.quality >= 720,
-      pubDate: new Date(item.pubDate)
+      guid: newznab.guid || null,
+      link: item.link || null,
+      isHD: newznab.category === 5040 || parsed.quality >= 720,
+      name: parsed.name || null,
+      nzbUrl: item.enclosure.url,
+      quality: parsed.quality || null,
+      pubDate: new Date(item.pubDate),
+      rage_id: +newznab.rageid || null,
+      season: parsed.season || null,
+      series_id: newznab.seriesid || null,
+      show: parsed.show || null,
+      size: +newznab.size || null,
+      source: parsed.source || null,
+      site: json.rss.channel.title,
+      tvairdate: (newznab.tvairdate) ? new Date(newznab.tvairdate) : null,
+      tvdb_id: +newznab.tvdbid || null,
+      title: item.title,
+      year: parsed.year || null
     };
 
     return episode;
   });
+
 
   return items.filter( (item) => {
     return item != null;

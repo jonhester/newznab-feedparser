@@ -21,10 +21,21 @@ test('test bad calls', function (t) {
 
 test('test parsing sample feed', function (t) {
   t.plan(2);
-  var xml = fs.readFileSync('test.xml');
+  var xml = fs.readFileSync('./tests/test.xml');
 
   var result = parse(xml);
 
   t.equal(result.length, 24);
   t.equal(result[0].show, "Grand Designs");
+});
+
+test('test parsing sample dognzb.cr tvsearch response', function (t) {
+  t.plan(2);
+
+  var xml = fs.readFileSync('./tests/dog.xml');
+
+  var result = parse(xml);
+  t.comment(result[0]);
+  t.equal(result.length, 8);
+  t.equal(result[0].show, "Futurama");
 });
