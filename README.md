@@ -1,5 +1,5 @@
 # newznab-feedparser
-Parses newznab rss feeds into a json object with a `nzbs` property that is an array of objects representing each nzb in the feed.
+Parses newznab rss feeds into a json object with a `nzbs` property that is an array of objects representing each nzb in the feed. Each parse function returns a promise resolving to the feed object.
 
 ## Installation
 ```
