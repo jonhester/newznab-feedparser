@@ -1,68 +1,78 @@
-import parser from 'xml2json';
-import episodeParser from 'episode-parser';
+import xml2json from 'xml2json';
+import bluebird from 'bluebird';
+import _ from 'lodash';
+import request from 'request-promise';
 
-let parseFeed = (xml, lastCheck) => {
+const fs = bluebird.promisifyAll(require('fs'));
 
+const customUnescape = (str) => {
+  const string = str.replace(/&#(\d+);/g, (match, dec) =>
+    unescape(String.fromCharCode(dec))
+  );
 
-  lastCheck = lastCheck || 0;
-
-  let json = JSON.parse(parser.toJson(xml));
-
-  let items = json.rss.channel.item.filter( (item) => {
-    return new Date(item.pubDate) > lastCheck;
-  });
-
-  items = items.map( (item) => {
-
-    let parsed = episodeParser(item.title);
-
-    if (!parsed) {
-      return null;
-    }
-
-    let newznab = {};
-
-    item['newznab:attr'].forEach( (attr) => {
-      newznab[attr.name] = attr.value;
-    });
-
-    let episode = {
-      category: +newznab.category,
-      categoryName: item.category,
-      codec: parsed.codec || null,
-      comments: item.comments,
-      description: item.description,
-      episode: +parsed.episode || null,
-      genre: newznab.genre || null,
-      grabs: +newznab.grabs || null,
-      group: parsed.group || null,
-      guid: newznab.guid || null,
-      link: item.link || null,
-      isHD: newznab.category === 5040 || parsed.quality >= 720,
-      name: parsed.name || null,
-      nzbUrl: item.enclosure.url,
-      quality: parsed.quality || null,
-      pubDate: new Date(item.pubDate),
-      rage_id: +newznab.rageid || null,
-      season: parsed.season || null,
-      series_id: newznab.seriesid || null,
-      show: parsed.show || null,
-      size: +newznab.size || null,
-      source: parsed.source || null,
-      site: json.rss.channel.title,
-      tvairdate: (newznab.tvairdate) ? new Date(newznab.tvairdate) : null,
-      tvdb_id: +newznab.tvdbid || null,
-      title: item.title,
-      year: parsed.year || null
-    };
-
-    return episode;
-  });
-
-
-  return items.filter( (item) => {
-    return item != null;
-  });
+  return _.unescape(string);
 };
 
-export default parseFeed;
+export default class parseNewznab {
+  static async fromFeed(url) {
+    const string = await request(url);
+    return await this.fromString(string);
+  }
+
+  static async fromString(string) {
+    const json = JSON.parse(xml2json.toJson(string));
+
+    const nzbs = json.rss.channel.item.map((nzb) => {
+      if ('pubDate' in nzb) nzb.pubDate = new Date(nzb.pubDate);
+
+      const newznab = {
+        'newznab:categories': [],
+      };
+
+      nzb['newznab:attr'].forEach((attr) => {
+        if (!isNaN(+attr.value)) attr.value = +attr.value;
+
+        if (attr.name === 'category') {
+          newznab['newznab:categories'].push(attr.value);
+        } else {
+          newznab[`newznab:${attr.name}`] = attr.value;
+        }
+      });
+
+      for (const k in nzb) {
+        if (typeof nzb[k] === 'string') {
+          nzb[k] = customUnescape(nzb[k]);
+        }
+      }
+
+      return {
+        ...nzb,
+        ...newznab,
+      };
+    });
+
+    // get newest pubDate
+    const lastUpdated = json.rss.channel.item.reduce((prev, current, i) => {
+      const d = json.rss.channel.item[i].pubDate;
+      const max = (new Date(prev) > new Date(d)) ? new Date(prev) : new Date(d);
+      return max;
+    });
+
+    const feed = {
+      title: customUnescape(json.rss.channel.title),
+      description: customUnescape(json.rss.channel.description),
+      link: json.rss.channel.link,
+      language: json.rss.channel.language,
+      webMaster: customUnescape(json.rss.channel.webMaster),
+      lastUpdated,
+      nzbs,
+    };
+
+    return feed;
+  }
+
+  static async fromFile(path) {
+    const string = await fs.readFileAsync(path);
+    return await this.fromString(string);
+  }
+}

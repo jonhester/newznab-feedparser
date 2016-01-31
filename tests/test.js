@@ -1,41 +1,12 @@
-var test = require('tape');
-var parse = require('../');
-var fs = require('fs');
+import test from 'tape';
+import parse from '../src';
+import fs from 'fs';
 
-test('test bad calls', function (t) {
-  t.plan(3);
-
-  t.throws(function() {
-    parse();
-  });
-
-  t.throws(function() {
-    parse('');
-  });
-
-  t.throws(function() {
-    parse('', new Date());
-  })
-
-});
-
-test('test parsing sample feed', function (t) {
+test('test parsing sample feed from string', async(t) => {
   t.plan(2);
-  var xml = fs.readFileSync('./tests/test.xml');
+  const xml = fs.readFileSync('./tests/test.xml');
 
-  var result = parse(xml);
-
-  t.equal(result.length, 24);
-  t.equal(result[0].show, "Grand Designs");
-});
-
-test('test parsing sample dognzb.cr tvsearch response', function (t) {
-  t.plan(2);
-
-  var xml = fs.readFileSync('./tests/dog.xml');
-
-  var result = parse(xml);
-  t.comment(result[0]);
-  t.equal(result.length, 8);
-  t.equal(result[0].show, "Futurama");
+  const result = await parse.fromString(xml);
+  t.equal(result.nzbs.length, 25);
+  t.equal(result.nzbs[0].title, 'Grand.Designs.S16E05.720p.HDTV.x264-C4TV');
 });
